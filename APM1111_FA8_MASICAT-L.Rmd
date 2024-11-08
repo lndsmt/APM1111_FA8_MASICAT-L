@@ -1,0 +1,135 @@
+---
+title: "FORMATIVE ASSESSMENT 8"
+author: "Lindsy Rossel C. Masicat"
+date: "2024-11-08"
+output: html_document
+---
+
+```{css, echo=FALSE}
+/* Center the table */
+table {
+  margin-left: auto;
+  margin-right: auto;
+}
+/* Left-align table data */
+td, th {
+  text-align: left;
+}
+```
+```{r table, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+library(car)
+```
+# Analysis of Plant Growth Study Using One-Way ANOVA
+
+## Introduction
+This study examines the effect of different treatment groups on plant weight. A one-way ANOVA was conducted to assess if treatment groups influenced plant weight.
+
+## Null Hypothesis
+The null hypothesis states there is no significant difference in mean weight across treatment groups.
+
+## Data Table
+```{r data table, echo=FALSE}
+data <- data.frame(
+  Weight = c(4.17, 5.58, 5.18, 6.11, 4.5, 4.61, 5.17, 4.53, 5.33, 5.14, 4.81, 4.17, 4.41, 3.59, 5.87, 3.83, 6.03, 4.89, 4.32, 4.69, 6.31, 5.12, 5.54, 5.5, 5.37, 5.29, 4.92, 6.15, 5.8, 5.26),
+  Group = c("ctrl", "ctrl", "ctrl", "ctrl", "ctrl", "ctrl", "ctrl", "ctrl", "ctrl", "ctrl", "trt1", "trt1", "trt1", "trt1", "trt1", "trt1", "trt1", "trt1", "trt1", "trt1", "trt2", "trt2", "trt2", "trt2", "trt2", "trt2", "trt2", "trt2", "trt2", "trt2")
+)
+
+kable(data, caption = "Plant Growth Data")
+```
+## Assumption 1: Continuous Dependent Variable
+The dependent variable "Weight" is continuous.
+
+## Assumption 2: Categorical Independent Variable with Three Groups
+The independent variable "Group" is categorical and has three levels: ctrl, trt1, and trt2.
+
+## Assumption 3: Independence of Observations
+There is no relationship between observations within or across the groups of the independent variable.
+
+## Assumption 4: Outliers and Descriptive Statistics
+### Descriptive Statistics by Group
+```{r 4, echo= FALSE}
+descriptive_stats <- data %>%
+  group_by(Group) %>%
+  summarise(
+    N = n(),
+    Mean = mean(Weight),
+    SD = sd(Weight),
+    Min = min(Weight),
+    Max = max(Weight)
+  )
+
+kable(descriptive_stats, caption = "Descriptive Statistics by Group")
+```
+### Boxplot for Outliers
+```{r 5, echo=FALSE}
+ggplot(data, aes(x = Group, y = Weight)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Weight by Group", x = "Group", y = "Weight")
+```
+<br>
+Interpretation: No extreme outliers were observed based on the boxplot.
+
+## Assumption 5: Normality
+### Shapiro-Wilk Test for Normality
+```{r 6, echo=FALSE}
+shapiro_results <- data %>%
+  group_by(Group) %>%
+  summarise(Shapiro_p_value = shapiro.test(Weight)$p.value)
+
+kable(shapiro_results, caption = "Shapiro-Wilk Test for Normality by Group")
+```
+<br>
+Interpretation: Each group was approximately normally distributed (p > .05).
+
+## Assumption 6: Homogeneity of Variances
+### Levene's Test for Homogeneity
+```{r 7, echo=FALSE}
+levene_result <- suppressWarnings(leveneTest(Weight ~ Group, data = data))
+kable(as.data.frame(levene_result), caption = "Levene's Test for Homogeneity of Variance")
+
+```
+<br>
+Interpretation: Levene's test indicated homogeneity of variances across groups (p > .05).
+
+## One-Way ANOVA
+```{r 8, echo=FALSE} 
+anova_result <- aov(Weight ~ Group, data = data)
+anova_summary <- summary(anova_result)
+
+kable(anova_summary[[1]], caption = "ANOVA Results")
+```
+
+<br>
+Interpretation: Report F-value, p-value, and partial eta squared.
+
+## Post-Hoc Analysis (If ANOVA is Significant)
+### Tukey's HSD Test
+```{r 9, echo=FALSE} 
+tukey_result <- TukeyHSD(anova_result)
+tukey_df <- as.data.frame(tukey_result$Group)
+tukey_df$Comparison <- rownames(tukey_df)
+rownames(tukey_df) <- NULL
+
+kable(tukey_df, caption = "Post-Hoc Tukey's HSD Test Results")
+```
+
+## Results
+
+Based on the one-way ANOVA, a significant effect of treatment on plant weight was found, with 
+\[
+F(2, 27) = [F-value], \, p = [p-value], \, \eta_p^2 = [effect \, size].
+\]
+The mean weights (\(M \pm SD\)) for each group were as follows:
+
+- Control group: \(M = [control\_mean], \, SD = [control\_sd]\)
+- Treatment 1: \(M = [trt1\_mean], \, SD = [trt1\_sd]\)
+- Treatment 2: \(M = [trt2\_mean], \, SD = [trt2\_sd]\)
+
+The Tukey’s HSD post-hoc analysis revealed significant differences between [specific groups with \(p < 0.05\)].
+
+## Conclusion
+Given the significant ANOVA results \(p < 0.05\), we reject the null hypothesis. This suggests that the different treatment groups had a statistically significant effect on plant weight, indicating that at least one treatment group's mean weight differs from the others. The results imply that the treatments may influence plant growth. Future research could explore these effects in more detail, potentially considering other variables that may affect growth outcomes.
